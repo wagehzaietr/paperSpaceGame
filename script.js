@@ -137,6 +137,12 @@ class SpaceShooter {
     this.mouseDown = false;
     this.lastShot = 0;
     this.shootCooldown = 200; // milliseconds
+    
+    // Touch controls state
+    this.touchControls = null;
+    
+    // Scale factor for responsive design
+    this.scaleFactor = 1;
 
     // Power-ups state
     this.powerUpStates = {
@@ -226,8 +232,48 @@ class SpaceShooter {
 
   resizeCanvas() {
     const dpr = window.devicePixelRatio || 1;
-    const displayWidth = 1280;
-    const displayHeight = 720;
+    
+    // Check if we're on mobile
+    const isMobile = window.innerWidth <= 768;
+    
+    let displayWidth, displayHeight;
+    
+    if (isMobile) {
+      // For mobile, use portrait 9:16 aspect ratio (720×1280) for modern phones
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight - 120; // Leave space for mobile controls
+      const aspectRatio = 9 / 16; // Portrait aspect ratio for phones
+      
+      // Use 98% of available space for better mobile experience
+      const maxWidth = viewportWidth * 0.98;
+      const maxHeight = viewportHeight * 0.95;
+      
+      if (maxWidth / maxHeight > aspectRatio) {
+        // Height is the limiting factor
+        displayHeight = maxHeight;
+        displayWidth = displayHeight * aspectRatio;
+      } else {
+        // Width is the limiting factor
+        displayWidth = maxWidth;
+        displayHeight = displayWidth / aspectRatio;
+      }
+      
+      // Ensure minimum playable size with 9:16 ratio
+      displayWidth = Math.max(360, Math.min(displayWidth, viewportWidth * 0.98));
+      displayHeight = Math.max(640, Math.min(displayHeight, viewportHeight * 0.95));
+    } else {
+      // Desktop - use fixed dimensions but scale down if needed
+      displayWidth = Math.min(1280, window.innerWidth - 40);
+      displayHeight = Math.min(720, window.innerHeight - 40);
+      
+      // Maintain aspect ratio on desktop too
+      const aspectRatio = 16 / 9;
+      if (displayWidth / displayHeight > aspectRatio) {
+        displayWidth = displayHeight * aspectRatio;
+      } else {
+        displayHeight = displayWidth / aspectRatio;
+      }
+    }
 
     // Set the actual canvas size in memory (scaled up for crisp rendering)
     this.canvas.width = displayWidth * dpr;
@@ -249,15 +295,27 @@ class SpaceShooter {
     // Store display dimensions for game logic
     this.displayWidth = displayWidth;
     this.displayHeight = displayHeight;
+    
+    // Store scale factor for coordinate conversion
+    this.scaleFactor = isMobile ? displayWidth / 720 : displayWidth / 1280; // Scale factor relative to mobile (720) or desktop (1280)
 
     // Update player position if it exists
     if (this.player) {
       // Keep player in bounds
-      this.player.x = Math.min(this.player.x, displayWidth - this.player.width);
-      this.player.y = Math.min(
-        this.player.y,
-        displayHeight - this.player.height
-      );
+      this.player.x = Math.min(this.player.x, displayWidth - this.player.width * this.scaleFactor);
+      this.player.y = Math.min(this.player.y, displayHeight - this.player.height * this.scaleFactor);
+    }
+    
+    // Update mobile controls visibility
+    this.updateMobileControlsVisibility();
+  }
+  
+  updateMobileControlsVisibility() {
+    const mobileControls = document.querySelector('.mobile-controls');
+    const isMobile = window.innerWidth <= 768;
+    
+    if (mobileControls) {
+      mobileControls.style.display = isMobile ? 'block' : 'none';
     }
   }
 
@@ -491,6 +549,160 @@ class SpaceShooter {
       // Save to localStorage
       localStorage.setItem('gameSettings_sfxVolume', volume);
     });
+    
+    // Touch controls setup
+    this.setupTouchControls();
+  }
+
+  setupTouchControls() {
+    // Touch control state
+    this.touchControls = {
+      joystick: {
+        active: false,
+        startX: 0,
+        startY: 0,
+        currentX: 0,
+        currentY: 0,
+        deltaX: 0,
+        deltaY: 0,
+        maxDistance: 60
+      },
+      shooting: false,
+      chargeShooting: false
+    };
+
+    // Get touch control elements
+    const virtualJoystick = document.getElementById('virtualJoystick');
+    const joystickKnob = document.getElementById('joystickKnob');
+    const shootButton = document.getElementById('shootButton');
+    const chargeShotButton = document.getElementById('chargeShotButton');
+
+    if (!virtualJoystick || !joystickKnob || !shootButton || !chargeShotButton) {
+      console.log('Touch controls not found, skipping setup');
+      return;
+    }
+
+    // Virtual Joystick Controls
+    const handleJoystickStart = (e) => {
+      e.preventDefault();
+      const touch = e.touches ? e.touches[0] : e;
+      const rect = virtualJoystick.getBoundingClientRect();
+      
+      this.touchControls.joystick.active = true;
+      this.touchControls.joystick.startX = rect.left + rect.width / 2;
+      this.touchControls.joystick.startY = rect.top + rect.height / 2;
+      this.touchControls.joystick.currentX = touch.clientX;
+      this.touchControls.joystick.currentY = touch.clientY;
+      
+      this.updateJoystickPosition();
+    };
+
+    const handleJoystickMove = (e) => {
+      if (!this.touchControls.joystick.active) return;
+      e.preventDefault();
+      
+      const touch = e.touches ? e.touches[0] : e;
+      this.touchControls.joystick.currentX = touch.clientX;
+      this.touchControls.joystick.currentY = touch.clientY;
+      
+      this.updateJoystickPosition();
+    };
+
+    const handleJoystickEnd = (e) => {
+      e.preventDefault();
+      this.touchControls.joystick.active = false;
+      this.touchControls.joystick.deltaX = 0;
+      this.touchControls.joystick.deltaY = 0;
+      
+      // Reset joystick knob to center
+      joystickKnob.style.transform = 'translate(-50%, -50%)';
+    };
+
+    // Joystick event listeners
+    virtualJoystick.addEventListener('touchstart', handleJoystickStart);
+    virtualJoystick.addEventListener('touchmove', handleJoystickMove);
+    virtualJoystick.addEventListener('touchend', handleJoystickEnd);
+    virtualJoystick.addEventListener('touchcancel', handleJoystickEnd);
+
+    // Mouse support for testing on desktop
+    virtualJoystick.addEventListener('mousedown', handleJoystickStart);
+    document.addEventListener('mousemove', handleJoystickMove);
+    document.addEventListener('mouseup', handleJoystickEnd);
+
+    // Shoot Button Controls
+    const handleShootStart = (e) => {
+      e.preventDefault();
+      this.touchControls.shooting = true;
+      shootButton.style.transform = 'scale(0.95)';
+    };
+
+    const handleShootEnd = (e) => {
+      e.preventDefault();
+      this.touchControls.shooting = false;
+      shootButton.style.transform = 'scale(1)';
+    };
+
+    // Shoot button event listeners
+    shootButton.addEventListener('touchstart', handleShootStart);
+    shootButton.addEventListener('touchend', handleShootEnd);
+    shootButton.addEventListener('touchcancel', handleShootEnd);
+    shootButton.addEventListener('mousedown', handleShootStart);
+    shootButton.addEventListener('mouseup', handleShootEnd);
+
+    // Charge Shot Button Controls
+    const handleChargeShotStart = (e) => {
+      e.preventDefault();
+      this.touchControls.chargeShooting = true;
+      chargeShotButton.style.transform = 'scale(0.95)';
+      this.chargeShoot();
+    };
+
+    const handleChargeShotEnd = (e) => {
+      e.preventDefault();
+      this.touchControls.chargeShooting = false;
+      chargeShotButton.style.transform = 'scale(1)';
+    };
+
+    // Charge shot button event listeners
+    chargeShotButton.addEventListener('touchstart', handleChargeShotStart);
+    chargeShotButton.addEventListener('touchend', handleChargeShotEnd);
+    chargeShotButton.addEventListener('touchcancel', handleChargeShotEnd);
+    chargeShotButton.addEventListener('mousedown', handleChargeShotStart);
+    chargeShotButton.addEventListener('mouseup', handleChargeShotEnd);
+  }
+
+  updateJoystickPosition() {
+    const joystickKnob = document.getElementById('joystickKnob');
+    if (!joystickKnob || !this.touchControls.joystick.active) return;
+
+    const deltaX = this.touchControls.joystick.currentX - this.touchControls.joystick.startX;
+    const deltaY = this.touchControls.joystick.currentY - this.touchControls.joystick.startY;
+    const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    const maxDistance = this.touchControls.joystick.maxDistance;
+
+    if (distance <= maxDistance) {
+      this.touchControls.joystick.deltaX = deltaX;
+      this.touchControls.joystick.deltaY = deltaY;
+      joystickKnob.style.transform = `translate(${deltaX - 20}px, ${deltaY - 20}px)`; // Adjusted for smaller knob
+    } else {
+      // Clamp to max distance
+      const ratio = maxDistance / distance;
+      this.touchControls.joystick.deltaX = deltaX * ratio;
+      this.touchControls.joystick.deltaY = deltaY * ratio;
+      joystickKnob.style.transform = `translate(${deltaX * ratio - 20}px, ${deltaY * ratio - 20}px)`; // Adjusted for smaller knob
+    }
+  }
+
+  updateTouchControls() {
+    // Update charge shot button state
+    const chargeShotButton = document.getElementById('chargeShotButton');
+    if (chargeShotButton) {
+      if (this.chargeShot.isReady) {
+        chargeShotButton.classList.add('ready');
+      } else {
+        chargeShotButton.classList.remove('ready');
+      }
+    }
   }
 
   setupUI() {
@@ -500,11 +712,15 @@ class SpaceShooter {
   }
 
   createPlayer() {
+    const isMobile = window.innerWidth <= 768;
+    const canvasWidth = this.displayWidth || this.canvas.width;
+    const canvasHeight = this.displayHeight || this.canvas.height;
+    
     this.player = {
-      x: (this.displayWidth || this.canvas.width) / 2 - 50,
-      y: (this.displayHeight || this.canvas.height) - 120,
-      width: 164,
-      height: 128,
+      x: canvasWidth / 2 - 70, // Center horizontally (adjusted for ship width)
+      y: isMobile ? canvasHeight - 180 : canvasHeight - 120, // Position higher on mobile for portrait layout
+      width: 140, // Using preferred ship size from memory
+      height: 105, // Using preferred ship size from memory
       speed: this.baseSpeed || 5,
       health: this.maxHealth || 1,
       maxHealth: this.maxHealth || 1,
@@ -1313,37 +1529,52 @@ class SpaceShooter {
   updatePlayer() {
     if (!this.player) return;
 
-    // Movement
+    // Movement from keyboard
+    let moveX = 0;
+    let moveY = 0;
+    
+    // Keyboard input
+    if (this.keys["ArrowLeft"] || this.keys["KeyA"]) moveX -= 1;
+    if (this.keys["ArrowRight"] || this.keys["KeyD"]) moveX += 1;
+    if (this.keys["ArrowUp"] || this.keys["KeyW"]) moveY -= 1;
+    if (this.keys["ArrowDown"] || this.keys["KeyS"]) moveY += 1;
+    
+    // Touch input (virtual joystick)
+    if (this.touchControls && this.touchControls.joystick.active) {
+      const normalizedX = this.touchControls.joystick.deltaX / this.touchControls.joystick.maxDistance;
+      const normalizedY = this.touchControls.joystick.deltaY / this.touchControls.joystick.maxDistance;
+      
+      // Apply touch input (with sensitivity adjustment)
+      moveX += normalizedX * 1.2;
+      moveY += normalizedY * 1.2;
+    }
+    
+    // Clamp movement values
+    moveX = Math.max(-1, Math.min(1, moveX));
+    moveY = Math.max(-1, Math.min(1, moveY));
+
+    // Apply movement
     const speed = this.player.speed;
     const screenWidth = this.displayWidth || this.canvas.width;
     const screenHeight = this.displayHeight || this.canvas.height;
 
-    if ((this.keys["ArrowLeft"] || this.keys["KeyA"]) && this.player.x > 0) {
-      this.player.x -= speed;
-    }
-    if (
-      (this.keys["ArrowRight"] || this.keys["KeyD"]) &&
-      this.player.x < screenWidth - this.player.width
-    ) {
-      this.player.x += speed;
-    }
-    if ((this.keys["ArrowUp"] || this.keys["KeyW"]) && this.player.y > 0) {
-      this.player.y -= speed;
-    }
-    if (
-      (this.keys["ArrowDown"] || this.keys["KeyS"]) &&
-      this.player.y < screenHeight - this.player.height
-    ) {
-      this.player.y += speed;
-    }
+    const newX = this.player.x + moveX * speed;
+    const newY = this.player.y + moveY * speed;
+    
+    // Keep player in bounds
+    this.player.x = Math.max(0, Math.min(screenWidth - this.player.width, newX));
+    this.player.y = Math.max(0, Math.min(screenHeight - this.player.height, newY));
 
-    // Continuous shooting when mouse is held down
-    if (this.mouseDown) {
+    // Continuous shooting when mouse is held down or touch shoot button is pressed
+    if (this.mouseDown || (this.touchControls && this.touchControls.shooting)) {
       this.shoot();
     }
 
     // Update shield status
     this.player.shielded = this.powerUpStates.shield.active;
+    
+    // Update touch controls visual state
+    this.updateTouchControls();
   }
 
   shoot() {
@@ -1600,11 +1831,15 @@ class SpaceShooter {
     const dirX = deltaX / distance;
     const dirY = deltaY / distance;
 
+    // Responsive bullet sizing - smaller on mobile
+    const isMobile = window.innerWidth <= 768;
+    const bulletSize = isMobile ? 32 : 48; // Smaller on mobile
+
     const bullet = {
-      x: enemy.x + enemy.width / 2 - 8,
+      x: enemy.x + enemy.width / 2 - bulletSize/2,
       y: enemy.y + enemy.height,
-      width: 48,
-      height: 48,
+      width: bulletSize,
+      height: bulletSize,
       speed: 4,
       dirX: dirX,
       dirY: dirY,
@@ -1625,16 +1860,20 @@ class SpaceShooter {
   bossShoot(boss) {
     if (!this.player) return;
 
+    // Responsive bullet sizing - smaller on mobile
+    const isMobile = window.innerWidth <= 768;
+    const bulletSize = isMobile ? 30 : 44; // Smaller on mobile
+
     // Reduced bullet spread for boss (3 bullets instead of 5)
     for (let i = -1; i <= 1; i++) {
       const angle = i * 70; // degrees - wider spread with fewer bullets
       const radians = (angle * Math.PI) / 180;
 
       const bullet = {
-        x: boss.x + boss.width / 2 - 8,
+        x: boss.x + boss.width / 2 - bulletSize/2,
         y: boss.y + boss.height,
-        width: 44,
-        height: 44,
+        width: bulletSize,
+        height: bulletSize,
         speed: 4,
         dirX: Math.sin(radians),
         dirY: Math.cos(radians),
@@ -1655,16 +1894,20 @@ class SpaceShooter {
   }
 
   bossSpecialAttack(boss) {
+    // Responsive bullet sizing - smaller on mobile
+    const isMobile = window.innerWidth <= 768;
+    const bulletSize = isMobile ? 30 : 44; // Smaller on mobile
+
     // Reduced circular bullet pattern (8 bullets instead of 12)
     for (let i = 0; i < 8; i++) {
       const angle = i * 45; // degrees - 45 degree spacing instead of 30
       const radians = (angle * Math.PI) / 180;
 
       const bullet = {
-        x: boss.x + boss.width / 2 - 6,
+        x: boss.x + boss.width / 2 - bulletSize/2,
         y: boss.y + boss.height / 2,
-        width: 44,
-        height: 44,
+        width: bulletSize,
+        height: bulletSize,
         speed: 3.5,
         dirX: Math.sin(radians),
         dirY: Math.cos(radians),
@@ -3129,14 +3372,15 @@ class SpaceShooter {
     const time = Date.now() * 0.001;
     const playerX = Math.floor(this.player.x);
     const playerY = Math.floor(this.player.y);
-    const playerWidth = Math.floor(this.player.width);
-    const playerHeight = Math.floor(this.player.height);
+    const playerWidth = Math.floor(this.player.width * (this.scaleFactor || 1));
+    const playerHeight = Math.floor(this.player.height * (this.scaleFactor || 1));
     
     // Engine thrust effect
     const isMoving = this.keys['ArrowLeft'] || this.keys['KeyA'] || 
                     this.keys['ArrowRight'] || this.keys['KeyD'] ||
                     this.keys['ArrowUp'] || this.keys['KeyW'] ||
-                    this.keys['ArrowDown'] || this.keys['KeyS'];
+                    this.keys['ArrowDown'] || this.keys['KeyS'] ||
+                    (this.touchControls && this.touchControls.joystick.active);
     
     if (isMoving) {
       // Draw engine particles (no blur)
@@ -3283,5 +3527,21 @@ class SpaceShooter {
 
 // Initialize game when page loads
 document.addEventListener("DOMContentLoaded", () => {
-  new SpaceShooter();
+  const game = new SpaceShooter();
+  
+  // Handle orientation change on mobile
+  window.addEventListener('orientationchange', () => {
+    setTimeout(() => {
+      if (game && typeof game.resizeCanvas === 'function') {
+        game.resizeCanvas();
+      }
+    }, 100);
+  });
+  
+  // Handle resize events
+  window.addEventListener('resize', () => {
+    if (game && typeof game.resizeCanvas === 'function') {
+      game.resizeCanvas();
+    }
+  });
 });

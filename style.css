@@ -319,6 +319,9 @@ body {
     align-items: center;
     padding: 20px;
     position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
 }
 
 #gameScreen::before {
@@ -395,7 +398,7 @@ body {
     top: 20px;
     left: 50%;
     transform: translateX(-50%);
-    width: 1280px;
+    width: min(1280px, 100vw);
     z-index: 20;
 }
 
@@ -1268,49 +1271,23 @@ body {
     font-size: 1.1rem;
 }
 
-@media (max-width: 1320px) {
+@media (min-width: 769px) and (max-width: 1320px) {
     #gameCanvas {
-        transform: scale(0.8);
-        width: 1280px;
-        height: 720px;
+        max-width: 90vw;
+        max-height: 90vh;
     }
     
     .game-ui {
-        transform: translateX(-50%) scale(0.8);
-    }
-    
-    .pause-btn {
-        right: calc(50% - 496px);
-    }
-    
-    .powerup-indicators {
-        right: calc(50% - 496px);
-    }
-    
-    .boss-health-container.compact {
-        left: calc(50% - 496px);
+        width: 100%;
+        left: 50%;
+        transform: translateX(-50%);
     }
 }
 
-@media (max-width: 1100px) {
+@media (min-width: 769px) and (max-width: 1100px) {
     #gameCanvas {
-        transform: scale(0.7);
-    }
-    
-    .game-ui {
-        transform: translateX(-50%) scale(0.7);
-    }
-    
-    .pause-btn {
-        right: calc(50% - 434px);
-    }
-    
-    .powerup-indicators {
-        right: calc(50% - 434px);
-    }
-    
-    .boss-health-container.compact {
-        left: calc(50% - 434px);
+        max-width: 85vw;
+        max-height: 85vh;
     }
 }
 
@@ -1342,6 +1319,465 @@ body {
     
     .map-preview {
         height: 150px;
+    }
+}
+
+/* Mobile and Touch Device Optimizations */
+
+/* Prevent text selection and long press menus on mobile */
+body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Canvas responsive scaling */
+#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    max-width: 100vw;
+    max-height: calc(100vh - 40px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+/* Mobile game container adjustments */
+@media (max-width: 768px) {
+    .game-container {
+        padding: 0;
+        overflow: hidden;
+    }
+    
+    #gameScreen {
+        padding: 0;
+        justify-content: center;
+        align-items: center;
+        padding-top: 10px;
+        width: 100%;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    #gameCanvas {
+        display: block;
+        width: 98vw;
+        height: auto;
+        max-height: calc(100vh - 130px);
+        border: 1px solid #00ffff;
+        margin: 0 auto;
+        position: relative;
+        left: auto;
+        right: auto;
+        transform: none;
+    }
+    
+    .game-ui {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        transform: none;
+        z-index: 50;
+    }
+    
+    .top-ui {
+        padding: 8px 10px;
+        font-size: 0.7rem;
+        background: rgba(0,0,0,0.9);
+        border-radius: 0;
+    }
+    
+    .score-display, .lives-display, .level-display, .round-display {
+        padding: 4px 8px;
+        font-size: 0.7rem;
+        min-width: auto;
+    }
+    
+    .label {
+        font-size: 0.6rem;
+    }
+    
+    #score, #level, #gameRound {
+        font-size: 0.8rem;
+    }
+    
+    .heart {
+        font-size: 0.8rem;
+    }
+    
+    /* Mobile UI repositioning */
+    .powerup-indicators {
+        position: fixed;
+        top: 50px;
+        right: 5px;
+        transform: scale(0.7);
+        z-index: 45;
+    }
+    
+    .charge-meter-container {
+        position: fixed;
+        bottom: 95px; /* Adjusted to match charge button */
+        right: 80px; /* Moved further right to avoid overlap */
+        min-width: 100px;
+        transform: scale(0.8);
+        z-index: 45;
+    }
+    
+    .pause-btn {
+        position: fixed;
+        top: 10px;
+        right: 10px;
+        width: 35px;
+        height: 35px;
+        font-size: 1rem;
+        z-index: 60;
+        display: block;
+    }
+    
+    .boss-health-container {
+        position: fixed;
+        top: 60px;
+        left: 10px;
+        right: 10px;
+        width: auto;
+        transform: none;
+        z-index: 50;
+    }
+    
+    .boss-health-container.compact {
+        position: fixed;
+        top: 60px;
+        left: 10px;
+        right: 60px;
+        width: auto;
+        transform: none;
+    }
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+    .game-title {
+        font-size: 1.8rem;
+    }
+    
+    .start-content {
+        padding: 10px;
+    }
+    
+    .start-btn {
+        padding: 12px 24px;
+        font-size: 1rem;
+        width: 200px;
+        margin: 5px auto;
+        display: block;
+    }
+    
+    .controls-info {
+        font-size: 0.8rem;
+        margin-top: 1rem;
+    }
+    
+    .controls-info p {
+        margin: 5px 0;
+    }
+    
+    /* Game Over and Pause screens */
+    .game-over-title, .pause-title {
+        font-size: 2rem;
+    }
+    
+    .final-score #finalScore {
+        font-size: 2rem;
+    }
+    
+    /* Settings screen mobile */
+    .settings-content {
+        padding: 20px 15px;
+    }
+    
+    .settings-title {
+        font-size: 2rem;
+    }
+    
+    .setting-item {
+        padding: 1.5rem 1rem;
+    }
+    
+    .setting-name {
+        font-size: 1.2rem;
+    }
+    
+    .slider-container {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .audio-slider {
+        max-width: 200px;
+        width: 100%;
+    }
+    
+    /* Map selection mobile */
+    .map-selection-content {
+        padding: 10px;
+    }
+    
+    .maps-container {
+        gap: 15px;
+        padding: 0 5px;
+    }
+    
+    .map-card {
+        margin: 0;
+    }
+    
+    /* Upgrade screen mobile */
+    .upgrade-content {
+        padding: 15px 10px;
+    }
+    
+    .upgrade-title {
+        font-size: 1.8rem;
+    }
+    
+    .upgrades-container {
+        gap: 10px;
+        padding: 0 5px;
+    }
+    
+    .upgrade-card {
+        width: 100%;
+        min-height: auto;
+        padding: 15px;
+    }
+    
+    .upgrade-icon {
+        font-size: 2rem;
+    }
+    
+    .upgrade-name {
+        font-size: 1rem;
+    }
+    
+    .upgrade-description {
+        font-size: 0.8rem;
+    }
+}
+
+/* Touch Controls Styles */
+.mobile-controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 120px; /* Reduced from 200px */
+    z-index: 100;
+    pointer-events: none;
+}
+
+.virtual-joystick {
+    position: absolute;
+    bottom: 15px; /* Reduced from 20px */
+    left: 15px; /* Reduced from 20px */
+    width: 100px; /* Reduced from 120px */
+    height: 100px; /* Reduced from 120px */
+    background: rgba(0, 255, 255, 0.1);
+    border: 2px solid rgba(0, 255, 255, 0.3);
+    border-radius: 50%;
+    pointer-events: all;
+    touch-action: none;
+}
+
+.joystick-knob {
+    position: absolute;
+    width: 40px; /* Reduced from 50px */
+    height: 40px; /* Reduced from 50px */
+    background: rgba(0, 255, 255, 0.5);
+    border: 2px solid rgba(0, 255, 255, 0.8);
+    border-radius: 50%;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    transition: none;
+    box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
+}
+
+.shoot-button {
+    position: absolute;
+    bottom: 20px; /* Reduced from 30px */
+    right: 20px; /* Reduced from 30px */
+    width: 70px; /* Reduced from 80px */
+    height: 70px; /* Reduced from 80px */
+    background: rgba(255, 107, 107, 0.2);
+    border: 3px solid rgba(255, 107, 107, 0.6);
+    border-radius: 50%;
+    pointer-events: all;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.3rem; /* Reduced from 1.5rem */
+    color: rgba(255, 107, 107, 0.8);
+    user-select: none;
+}
+
+.shoot-button:active {
+    background: rgba(255, 107, 107, 0.4);
+    border-color: rgba(255, 107, 107, 0.9);
+    transform: scale(0.95);
+}
+
+.charge-shot-button {
+    position: absolute;
+    bottom: 95px; /* Adjusted from 120px */
+    right: 20px; /* Reduced from 30px */
+    width: 50px; /* Reduced from 60px */
+    height: 50px; /* Reduced from 60px */
+    background: rgba(255, 255, 0, 0.2);
+    border: 2px solid rgba(255, 255, 0, 0.6);
+    border-radius: 50%;
+    pointer-events: all;
+    touch-action: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem; /* Reduced from 1.2rem */
+    color: rgba(255, 255, 0, 0.8);
+    user-select: none;
+}
+
+.charge-shot-button:active {
+    background: rgba(255, 255, 0, 0.4);
+    border-color: rgba(255, 255, 0, 0.9);
+    transform: scale(0.95);
+}
+
+.charge-shot-button.ready {
+    animation: chargeButtonReady 1s ease-in-out infinite alternate;
+}
+
+@keyframes chargeButtonReady {
+    0% { 
+        box-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+        border-color: rgba(255, 255, 0, 0.6);
+    }
+    100% { 
+        box-shadow: 0 0 20px rgba(255, 255, 0, 0.9);
+        border-color: rgba(255, 255, 0, 1);
+    }
+}
+
+/* Hide mobile controls on desktop */
+@media (min-width: 769px) {
+    .mobile-controls {
+        display: none;
+    }
+}
+
+/* Show mobile controls only on mobile */
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: block;
+    }
+    
+    .controls-info {
+        display: none; /* Hide keyboard instructions on mobile */
+    }
+}
+
+/* Landscape orientation adjustments for mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    #gameCanvas {
+        width: auto;
+        height: calc(100vh - 110px);
+        max-width: 90vw;
+        display: block;
+        margin: 0 auto;
+        position: relative;
+        left: auto;
+        right: auto;
+        transform: none;
+    }
+    
+    #gameScreen {
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        position: relative;
+    }
+    
+    .virtual-joystick {
+        width: 90px; /* Reduced from 100px */
+        height: 90px; /* Reduced from 100px */
+        bottom: 10px; /* Reduced from 15px */
+        left: 10px; /* Reduced from 15px */
+    }
+    
+    .joystick-knob {
+        width: 35px; /* Reduced from 40px */
+        height: 35px; /* Reduced from 40px */
+    }
+    
+    .shoot-button {
+        width: 60px; /* Reduced from 70px */
+        height: 60px; /* Reduced from 70px */
+        bottom: 15px; /* Reduced from 20px */
+        right: 15px; /* Reduced from 20px */
+        font-size: 1.1rem; /* Reduced from 1.3rem */
+    }
+    
+    .charge-shot-button {
+        width: 45px; /* Reduced from 50px */
+        height: 45px; /* Reduced from 50px */
+        bottom: 80px; /* Reduced from 100px */
+        right: 15px; /* Reduced from 20px */
+        font-size: 0.9rem; /* Reduced from 1rem */
+    }
+    
+    .mobile-controls {
+        height: 100px; /* Reduced from 160px */
+    }
+    
+    .charge-meter-container {
+        bottom: 70px; /* Reduced from 90px */
+        right: 70px; /* Reduced from 80px */
+    }
+}
+
+/* Control instructions visibility */
+.desktop-controls {
+    display: block;
+}
+
+.mobile-controls-info {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .desktop-controls {
+        display: none;
+    }
+    
+    .mobile-controls-info {
+        display: block;
+    }
+}
+
+/* Show mobile controls only on mobile */
+@media (max-width: 768px) {
+    .mobile-controls {
+        display: block;
+    }
+    
+    .controls-info {
+        font-size: 0.9rem;
+        margin-top: 1rem;
     }
 }
 

@@ -2,7 +2,11 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#000">
     <title>Space Shooter - Epic Battle</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -16,9 +20,16 @@
                 <button id="selectMapButton" class="start-btn">SELECT MAP</button>
                 <button id="quickStartButton" class="start-btn secondary">QUICK START</button>
                 <div class="controls-info">
-                    <p>Use ARROW KEYS or WASD to move</p>
-                    <p>Press SPACEBAR or LEFT CLICK to shoot</p>
-                    <p>Collect power-ups to enhance your ship!</p>
+                    <div class="desktop-controls">
+                        <p>Use ARROW KEYS or WASD to move</p>
+                        <p>Press SPACEBAR or LEFT CLICK to shoot</p>
+                        <p>Collect power-ups to enhance your ship!</p>
+                    </div>
+                    <div class="mobile-controls-info">
+                        <p>Use virtual joystick to move your ship</p>
+                        <p>Tap shoot button to fire bullets</p>
+                        <p>Tap charge button for special attacks!</p>
+                    </div>
                 </div>
             </div>
         </div>
@@ -325,6 +336,15 @@
         <!-- Volume Control -->
         <div class="volume-control">
             <button id="muteButton" class="volume-btn">🔊</button>
+        </div>
+
+        <!-- Mobile Touch Controls -->
+        <div class="mobile-controls">
+            <div class="virtual-joystick" id="virtualJoystick">
+                <div class="joystick-knob" id="joystickKnob"></div>
+            </div>
+            <button class="shoot-button" id="shootButton">🔫</button>
+            <button class="charge-shot-button" id="chargeShotButton">⚡</button>
         </div>
     </div>
 
