@@ -1701,19 +1701,20 @@ class SpaceShooter {
         y: spawnY,
         width: 60,
         height: 60,
-        speed: 3 + Math.random() * 2, // Random speed 3-5
+        speed: 2 + Math.random() * 1.5, // Slightly slower for more dramatic charging (2-3.5)
         health: 1,
         score: 500, // High score reward
         type: "secretenemy",
         pattern: "anomaly",
         direction: fromLeft ? 1 : -1, // 1 for right, -1 for left
-        hasSpawned: false // Track if spawn explosion happened
+        hasSpawned: false, // Track if spawn explosion happened
+        isCharging: false // Track if actively charging player
       };
       
       this.enemies.push(anomaly);
       this.lastAnomalySpawn = currentTime;
       
-      console.log(`Anomaly spawned from ${fromLeft ? 'left' : 'right'} side at y=${spawnY}`);
+      console.log(`Anomaly spawned from ${fromLeft ? 'left' : 'right'} side at y=${spawnY} - will charge at player after spawn effect`);
     }
   }
 
@@ -1764,14 +1765,12 @@ class SpaceShooter {
         // Regular enemy movement
         switch (enemy.pattern) {
           case "anomaly":
-            // Anomaly enemy - horizontal movement
-            enemy.x += enemy.speed * enemy.direction;
-            
             // Create spawn explosion effect only once when entering screen
             if (!enemy.hasSpawned && 
                 ((enemy.direction === 1 && enemy.x > -40) || 
                  (enemy.direction === -1 && enemy.x < screenWidth + 40))) {
               enemy.hasSpawned = true;
+              enemy.isCharging = true; // Start charging after spawn
               this.createAnomalySpawnEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
               
               // Play anomaly sound
@@ -1781,9 +1780,30 @@ class SpaceShooter {
               }
             }
             
-            // Remove when completely off screen
-            if ((enemy.direction === 1 && enemy.x > screenWidth + 100) || 
-                (enemy.direction === -1 && enemy.x < -100)) {
+            // Anomaly enemy movement behavior
+            if (enemy.isCharging && this.player) {
+              // Calculate direction towards player
+              const deltaX = this.player.x + this.player.width / 2 - (enemy.x + enemy.width / 2);
+              const deltaY = this.player.y + this.player.height / 2 - (enemy.y + enemy.height / 2);
+              const distance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+              
+              if (distance > 0) {
+                // Normalize direction and apply speed
+                const dirX = deltaX / distance;
+                const dirY = deltaY / distance;
+                
+                // Move towards player (slower for more dramatic effect)
+                enemy.x += dirX * enemy.speed * 0.8; // 80% of original speed
+                enemy.y += dirY * enemy.speed * 0.8;
+              }
+            } else if (!enemy.hasSpawned) {
+              // Continue horizontal movement until spawn effect triggers
+              enemy.x += enemy.speed * enemy.direction;
+            }
+            
+            // Remove when very far off screen
+            if (enemy.x < -200 || enemy.x > screenWidth + 200 || 
+                enemy.y < -200 || enemy.y > screenHeight + 200) {
               this.enemies.splice(i, 1);
               continue;
             }
@@ -1922,13 +1942,31 @@ class SpaceShooter {
                   enemy.y + enemy.height / 2
                 );
                 
-                // Play anomaly destruction sound
-                if (this.audioEnabled) {
-                  this.secretEnemySound.currentTime = 0;
-                  this.secretEnemySound.play().catch(() => {});
+                // Stop background music temporarily for dramatic effect
+                if (this.audioEnabled && this.backgroundMusic) {
+                  this.backgroundMusic.pause();
+                  
+                  // Resume background music after 2 seconds for dramatic pause
+                  setTimeout(() => {
+                    if (this.audioEnabled && this.gameState === "playing") {
+                      this.backgroundMusic.play().catch(() => {});
+                    }
+                  }, 2000);
                 }
                 
-                console.log('Anomaly enemy destroyed! +500 points');
+                // Stop secret enemy audio if it's still playing
+                if (this.audioEnabled && this.secretEnemySound) {
+                  this.secretEnemySound.pause();
+                  this.secretEnemySound.currentTime = 0;
+                }
+                
+                // Play pop sound when destroyed (not secret enemy sound)
+                if (this.audioEnabled) {
+                  this.popSound.currentTime = 0;
+                  this.popSound.play().catch(() => {});
+                }
+                
+                console.log('Anomaly enemy destroyed! Music paused temporarily. +500 points');
               }
 
               // Create explosion
