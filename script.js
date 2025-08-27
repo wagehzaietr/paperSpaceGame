@@ -1586,11 +1586,15 @@ class SpaceShooter {
       : this.shootCooldown;
 
     if (currentTime - this.lastShot > cooldown) {
+      // Responsive bullet sizing - smaller on mobile
+      const isMobile = window.innerWidth <= 768;
+      const bulletSize = isMobile ? 20 : 28; // Smaller on mobile
+      
       const baseBullet = {
-        x: this.player.x + this.player.width / 2 - 6,
+        x: this.player.x + this.player.width / 2 - bulletSize / 2, // Proper centering
         y: this.player.y,
-        width: 28,
-        height: 28,
+        width: bulletSize,
+        height: bulletSize,
         speed: 8,
         damage: this.powerUpStates.extraDamage.active
           ? this.baseDamage * 2
@@ -1657,12 +1661,16 @@ class SpaceShooter {
       return; // Still on cooldown
     }
 
+    // Responsive charge bullet sizing - smaller on mobile
+    const isMobile = window.innerWidth <= 768;
+    const chargeBulletSize = isMobile ? 45 : 64; // Smaller on mobile
+    
     // Create powerful charge shot
     const chargeBullet = {
-      x: this.player.x + this.player.width / 2 - 25,
+      x: this.player.x + this.player.width / 2 - chargeBulletSize / 2, // Proper centering
       y: this.player.y,
-      width: 64,
-      height: 64,
+      width: chargeBulletSize,
+      height: chargeBulletSize,
       speed: 5,
       damage: 15, // High damage
       color: "#ff0000",
