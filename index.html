@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Shooter - Epic Battle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <!-- Start Screen -->
+        <div id="startScreen" class="screen active">
+            <div class="start-content">
+                <h1 class="game-title">SPACE SHOOTER</h1>
+                <p class="game-subtitle">Defend the Galaxy</p>
+                <button id="selectMapButton" class="start-btn">SELECT MAP</button>
+                <button id="quickStartButton" class="start-btn secondary">QUICK START</button>
+                <div class="controls-info">
+                    <p>Use ARROW KEYS or WASD to move</p>
+                    <p>Press SPACEBAR or LEFT CLICK to shoot</p>
+                    <p>Collect power-ups to enhance your ship!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Selection Screen -->
+        <div id="mapSelectionScreen" class="screen">
+            <div class="map-selection-content">
+                <h1 class="map-selection-title">SELECT BATTLEFIELD</h1>
+                <p class="map-selection-subtitle">Choose your combat zone</p>
+                
+                <div class="maps-container">
+                    <div class="map-card" data-map="space">
+                        <div class="map-preview">
+                            <img src="assets/images/background.png" alt="Deep Space" class="map-thumbnail">
+                            <div class="map-overlay">
+                                <h3 class="map-name">Deep Space</h3>
+                                <p class="map-description">Classic space battlefield with asteroid fields</p>
+                                <div class="map-stats">
+                                    <span class="difficulty easy">Easy</span>
+                                    <span class="best-score">Best: <span id="spaceScore">0</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="select-map-btn" data-map="space">SELECT</button>
+                    </div>
+                    
+                    <div class="map-card" data-map="nebula">
+                        <div class="map-preview">
+                            <img src="maps/background1.png" alt="Cosmic Nebula" class="map-thumbnail">
+                            <div class="map-overlay">
+                                <h3 class="map-name">Cosmic Nebula</h3>
+                                <p class="map-description">Navigate through colorful cosmic clouds</p>
+                                <div class="map-stats">
+                                    <span class="difficulty medium">Medium</span>
+                                    <span class="best-score">Best: <span id="nebulaScore">0</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="select-map-btn" data-map="nebula">SELECT</button>
+                    </div>
+                    
+                    <div class="map-card" data-map="galaxy">
+                        <div class="map-preview">
+                            <img src="maps/background2.png" alt="Galactic Core" class="map-thumbnail">
+                            <div class="map-overlay">
+                                <h3 class="map-name">Galactic Core</h3>
+                                <p class="map-description">Battle in the heart of the galaxy</p>
+                                <div class="map-stats">
+                                    <span class="difficulty hard">Hard</span>
+                                    <span class="best-score">Best: <span id="galaxyScore">0</span></span>
+                                </div>
+                            </div>
+                        </div>
+                        <button class="select-map-btn" data-map="galaxy">SELECT</button>
+                    </div>
+                </div>
+                
+                <div class="map-selection-buttons">
+                    <button id="backToMenuButton" class="game-btn secondary">BACK TO MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-ui">
+                <div class="top-ui">
+                    <div class="score-display">
+                        <span class="label">SCORE:</span>
+                        <span id="score">0</span>
+                    </div>
+                    <div class="lives-display">
+                        <span class="label">LIVES:</span>
+                        <div id="lives" class="lives-container">
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                            <span class="heart">♥</span>
+                        </div>
+                    </div>
+                    <div class="level-display">
+                        <span class="label">LEVEL:</span>
+                        <span id="level">1</span>
+                    </div>
+                    <div class="round-display">
+                        <span class="label">ROUND:</span>
+                        <span id="gameRound">1</span>
+                    </div>
+                </div>
+                
+                <!-- Boss Health Bar -->
+                <div id="bossHealthContainer" class="boss-health-container compact" style="display: none;">
+                    <div class="boss-info">
+                        <span class="boss-name" id="bossName">BOSS</span>
+                    </div>
+                    <div class="boss-health-bar">
+                        <div class="boss-health-fill" id="bossHealthFill"></div>
+                        <div class="boss-health-text">
+                            <span id="bossHealthText">1000/1000</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Power-up indicators -->
+                <div class="powerup-indicators">
+                    <div id="rapidFireIndicator" class="powerup-indicator">
+                        <span class="powerup-icon">🔥</span>
+                        <div class="powerup-timer"></div>
+                    </div>
+                    <div id="shieldIndicator" class="powerup-indicator">
+                        <span class="powerup-icon">🛡️</span>
+                        <div class="powerup-timer"></div>
+                    </div>
+                    <div id="extraDamageIndicator" class="powerup-indicator">
+                        <span class="powerup-icon">💥</span>
+                        <div class="powerup-timer"></div>
+                    </div>
+                </div>
+
+                <!-- Charge Shot Meter -->
+                <div class="charge-meter-container">
+                    <div class="charge-meter-label">CHARGE SHOT</div>
+                    <div class="charge-meter">
+                        <div class="charge-meter-fill" id="chargeMeterFill"></div>
+                        <div class="charge-meter-text">Press 'E' to use</div>
+                    </div>
+                </div>
+            </div>
+            
+            <canvas id="gameCanvas"></canvas>
+            
+            <!-- Pause Button -->
+            <button id="pauseButton" class="pause-btn">⏸️</button>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameOverScreen" class="screen">
+            <div class="game-over-content">
+                <h1 class="game-over-title">MISSION FAILED</h1>
+                <div class="final-score">
+                    <p>Final Score:</p>
+                    <span id="finalScore">0</span>
+                </div>
+                <div class="game-over-buttons">
+                    <button id="restartButton" class="game-btn">RETRY MISSION</button>
+                    <button id="menuButton" class="game-btn secondary">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pause Screen -->
+        <div id="pauseScreen" class="screen">
+            <div class="pause-content">
+                <h2 class="pause-title">MISSION PAUSED</h2>
+                <div class="pause-buttons">
+                    <button id="resumeButton" class="game-btn">RESUME</button>
+                    <button id="mainMenuButton" class="game-btn secondary">MAIN MENU</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Upgrade Screen -->
+        <div id="upgradeScreen" class="screen">
+            <div class="upgrade-content">
+                <h1 class="upgrade-title">ROUND COMPLETE!</h1>
+                <p class="upgrade-subtitle">Choose ONE enhancement to proceed</p>
+                <div class="round-info">
+                    <span class="round-display">Round: <span id="currentRound">1</span></span>
+                    <span class="score-display">Score: <span id="roundScore">0</span></span>
+                </div>
+                
+                <div class="upgrades-container">
+                    <div class="upgrade-card" data-upgrade="damage">
+                        <div class="upgrade-icon">🔥</div>
+                        <h3 class="upgrade-name">PLASMA BOOST</h3>
+                        <p class="upgrade-description">Increase weapon damage by 25%</p>
+                        <div class="upgrade-level">
+                            Level: <span class="level-display" id="damageLevel">0</span>/5
+                        </div>
+                        <button class="upgrade-btn" data-upgrade="damage">UPGRADE</button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="health">
+                        <div class="upgrade-icon">❤️</div>
+                        <h3 class="upgrade-name">ARMOR PLATING</h3>
+                        <p class="upgrade-description">Increase ship health by 1</p>
+                        <div class="upgrade-level">
+                            Level: <span class="level-display" id="healthLevel">0</span>/5
+                        </div>
+                        <button class="upgrade-btn" data-upgrade="health">UPGRADE</button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="speed">
+                        <div class="upgrade-icon">⚡</div>
+                        <h3 class="upgrade-name">THRUSTER UPGRADE</h3>
+                        <p class="upgrade-description">Increase movement speed by 20%</p>
+                        <div class="upgrade-level">
+                            Level: <span class="level-display" id="speedLevel">0</span>/5
+                        </div>
+                        <button class="upgrade-btn" data-upgrade="speed">UPGRADE</button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="firerate">
+                        <div class="upgrade-icon">💨</div>
+                        <h3 class="upgrade-name">AUTO-LOADER</h3>
+                        <p class="upgrade-description">Reduce firing cooldown by 15%</p>
+                        <div class="upgrade-level">
+                            Level: <span class="level-display" id="firerateLevel">0</span>/5
+                        </div>
+                        <button class="upgrade-btn" data-upgrade="firerate">UPGRADE</button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="homing">
+                        <div class="upgrade-icon">🎯</div>
+                        <h3 class="upgrade-name">HOMING MUZZLE</h3>
+                        <p class="upgrade-description">Bullets track and follow enemies</p>
+                        <div class="upgrade-level">
+                            Level: <span class="level-display" id="homingLevel">0</span>/3
+                        </div>
+                        <button class="upgrade-btn" data-upgrade="homing">UPGRADE</button>
+                    </div>
+                    
+                    <div class="upgrade-card" data-upgrade="spread">
+                        <div class="upgrade-icon">💥</div>
+                        <h3 class="upgrade-name">SPREAD CANNON</h3>
+                        <p class="upgrade-description">Fire multiple bullets in spread pattern</p>
+                        <div class="upgrade-level">
+                            Level: <span class="level-display" id="spreadLevel">0</span>/3
+                        </div>
+                        <button class="upgrade-btn" data-upgrade="spread">UPGRADE</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Audio Elements -->
+        <audio id="backgroundMusic" loop>
+            <source src="assets/audio/backgroundMusic.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="shootSound">
+            <source src="assets/audio/shoot-sound2.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="popSound">
+            <source src="assets/audio/pop.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="firstBossSound">
+            <source src="assets/audio/firstbosssound.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="enemyBullet">
+            <source src="assets/audio/enemybulletsound.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="secondBossSound">
+            <source src="assets/audio/secondbosssound.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="bossIntroMusic">
+            <source src="assets/audio/bossintro.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="powerupSound">
+            <source src="assets/audio/powerup-sound.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="chargeshotSound">
+            <source src="assets/audio/chargeshot.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="secretEnemySound">
+            <source src="assets/audio/secretenemy.mp3" type="audio/mpeg">
+        </audio>
+        <audio id="enemybulletsound">
+            <source src="assets/audio/firstbosssound.mp3" type="audio/mpeg">
+        </audio>
+
+        <!-- Volume Control -->
+        <div class="volume-control">
+            <button id="muteButton" class="volume-btn">🔊</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
