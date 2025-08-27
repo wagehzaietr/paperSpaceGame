@@ -171,6 +171,27 @@ class SpaceShooter {
     this.chargeshotSound = document.getElementById("chargeshotSound");
     this.secretEnemySound = document.getElementById("secretEnemySound");
     this.audioEnabled = true;
+    
+    // Audio volume settings
+    this.musicVolume = 1.0;
+    this.sfxVolume = 1.0;
+    
+    // Load saved audio settings
+    this.loadAudioSettings();
+    
+    // Initialize audio volumes
+    if (this.backgroundMusic) this.backgroundMusic.volume = this.musicVolume;
+    if (this.bossIntroMusic) this.bossIntroMusic.volume = this.musicVolume;
+    if (this.firstBossSound) this.firstBossSound.volume = this.musicVolume;
+    if (this.secondBossSound) this.secondBossSound.volume = this.musicVolume;
+    
+    // Initialize sound effect volumes
+    if (this.shootSound) this.shootSound.volume = this.sfxVolume;
+    if (this.popSound) this.popSound.volume = this.sfxVolume;
+    if (this.enemyBullet) this.enemyBullet.volume = this.sfxVolume;
+    if (this.powerupSound) this.powerupSound.volume = this.sfxVolume;
+    if (this.chargeshotSound) this.chargeshotSound.volume = this.sfxVolume;
+    if (this.secretEnemySound) this.secretEnemySound.volume = this.sfxVolume;
 
     // Special Attack System
     this.chargeShot = {
@@ -309,7 +330,12 @@ class SpaceShooter {
 
       if (e.code === "Escape") {
         e.preventDefault();
-        this.togglePause();
+        if (this.gameState === "playing") {
+          // During gameplay, show settings instead of pause
+          this.showSettings();
+        } else {
+          this.togglePause();
+        }
       }
     });
 
@@ -434,6 +460,37 @@ class SpaceShooter {
         }
       });
     });
+
+    // Settings system event listeners
+    document.getElementById("closeSettingsButton").addEventListener("click", () => {
+      this.hideSettings();
+    });
+
+    // Music volume slider
+    const musicSlider = document.getElementById("musicVolumeSlider");
+    const musicValue = document.getElementById("musicVolumeValue");
+    
+    musicSlider.addEventListener("input", (e) => {
+      const volume = e.target.value / 100;
+      this.updateMusicVolume(volume);
+      musicValue.textContent = e.target.value + "%";
+      
+      // Save to localStorage
+      localStorage.setItem('gameSettings_musicVolume', volume);
+    });
+
+    // Sound effects volume slider
+    const sfxSlider = document.getElementById("sfxVolumeSlider");
+    const sfxValue = document.getElementById("sfxVolumeValue");
+    
+    sfxSlider.addEventListener("input", (e) => {
+      const volume = e.target.value / 100;
+      this.updateSfxVolume(volume);
+      sfxValue.textContent = e.target.value + "%";
+      
+      // Save to localStorage
+      localStorage.setItem('gameSettings_sfxVolume', volume);
+    });
   }
 
   setupUI() {
@@ -551,7 +608,21 @@ class SpaceShooter {
     this.gameState = "menu";
     this.gameRunning = false;
     this.showScreen("startScreen");
+    
+    // Stop all music when returning to menu
     this.backgroundMusic.pause();
+    if (this.bossIntroMusic) {
+      this.bossIntroMusic.pause();
+      this.bossIntroMusic.currentTime = 0;
+    }
+    if (this.firstBossSound) {
+      this.firstBossSound.pause();
+      this.firstBossSound.currentTime = 0;
+    }
+    if (this.secondBossSound) {
+      this.secondBossSound.pause();
+      this.secondBossSound.currentTime = 0;
+    }
   }
 
   showMapSelection() {
@@ -626,7 +697,11 @@ class SpaceShooter {
       this.updateUpgradeDisplay();
     }, 100);
 
+    // Stop all music during upgrade screen
     this.backgroundMusic.pause();
+    if (this.bossIntroMusic) {
+      this.bossIntroMusic.pause();
+    }
     console.log("=== SHOW UPGRADE SCREEN END ===");
   }
 
@@ -1082,7 +1157,21 @@ class SpaceShooter {
     this.gameState = "gameOver";
     this.gameRunning = false;
     this.showScreen("gameOverScreen");
+    
+    // Stop all music when game ends
     this.backgroundMusic.pause();
+    if (this.bossIntroMusic) {
+      this.bossIntroMusic.pause();
+      this.bossIntroMusic.currentTime = 0;
+    }
+    if (this.firstBossSound) {
+      this.firstBossSound.pause();
+      this.firstBossSound.currentTime = 0;
+    }
+    if (this.secondBossSound) {
+      this.secondBossSound.pause();
+      this.secondBossSound.currentTime = 0;
+    }
 
     // Save high score for current map
     this.saveMapScore(this.selectedMap, this.score);
@@ -1119,6 +1208,105 @@ class SpaceShooter {
     } else {
       muteButton.textContent = "🔇";
       this.backgroundMusic.pause();
+    }
+  }
+
+  // Settings screen methods
+  showSettings() {
+    if (this.gameState === "playing") {
+      // Pause the game when showing settings
+      this.gameState = "settings";
+      this.backgroundMusic.pause();
+    }
+    this.showScreen("settingsScreen");
+    this.updateSettingsUI();
+  }
+
+  hideSettings() {
+    if (this.gameState === "settings") {
+      // Resume the game when hiding settings
+      this.gameState = "playing";
+      this.showScreen("gameScreen");
+      if (this.audioEnabled) {
+        this.backgroundMusic.play().catch(() => {});
+      }
+    } else {
+      // Return to previous screen if not from gameplay
+      this.showScreen("startScreen");
+    }
+  }
+
+  updateSettingsUI() {
+    // Update slider values to match current settings
+    const musicSlider = document.getElementById("musicVolumeSlider");
+    const musicValue = document.getElementById("musicVolumeValue");
+    const sfxSlider = document.getElementById("sfxVolumeSlider");
+    const sfxValue = document.getElementById("sfxVolumeValue");
+
+    if (musicSlider && musicValue) {
+      musicSlider.value = Math.round(this.musicVolume * 100);
+      musicValue.textContent = Math.round(this.musicVolume * 100) + "%";
+    }
+
+    if (sfxSlider && sfxValue) {
+      sfxSlider.value = Math.round(this.sfxVolume * 100);
+      sfxValue.textContent = Math.round(this.sfxVolume * 100) + "%";
+    }
+  }
+
+  loadAudioSettings() {
+    // Load saved audio settings from localStorage
+    const savedMusicVolume = localStorage.getItem('gameSettings_musicVolume');
+    const savedSfxVolume = localStorage.getItem('gameSettings_sfxVolume');
+
+    if (savedMusicVolume !== null) {
+      this.musicVolume = parseFloat(savedMusicVolume);
+    }
+
+    if (savedSfxVolume !== null) {
+      this.sfxVolume = parseFloat(savedSfxVolume);
+    }
+  }
+
+  updateMusicVolume(volume) {
+    this.musicVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
+    
+    // Update all music audio elements
+    if (this.backgroundMusic) {
+      this.backgroundMusic.volume = this.musicVolume;
+    }
+    if (this.bossIntroMusic) {
+      this.bossIntroMusic.volume = this.musicVolume;
+    }
+    if (this.firstBossSound) {
+      this.firstBossSound.volume = this.musicVolume;
+    }
+    if (this.secondBossSound) {
+      this.secondBossSound.volume = this.musicVolume;
+    }
+  }
+
+  updateSfxVolume(volume) {
+    this.sfxVolume = Math.max(0, Math.min(1, volume)); // Clamp between 0 and 1
+    
+    // Update all sound effect audio elements
+    if (this.shootSound) {
+      this.shootSound.volume = this.sfxVolume;
+    }
+    if (this.popSound) {
+      this.popSound.volume = this.sfxVolume;
+    }
+    if (this.enemyBullet) {
+      this.enemyBullet.volume = this.sfxVolume;
+    }
+    if (this.powerupSound) {
+      this.powerupSound.volume = this.sfxVolume;
+    }
+    if (this.chargeshotSound) {
+      this.chargeshotSound.volume = this.sfxVolume;
+    }
+    if (this.secretEnemySound) {
+      this.secretEnemySound.volume = this.sfxVolume;
     }
   }
 
@@ -1242,10 +1430,10 @@ class SpaceShooter {
     const chargeBullet = {
       x: this.player.x + this.player.width / 2 - 25,
       y: this.player.y,
-      width: 50,
-      height: 50,
-      speed: 12,
-      damage: 5, // High damage
+      width: 64,
+      height: 64,
+      speed: 5,
+      damage: 15, // High damage
       color: "#ff0000",
       sprite: "powershot",
       isPlayerBullet: true,
@@ -1699,8 +1887,8 @@ class SpaceShooter {
       const anomaly = {
         x: fromLeft ? -80 : screenWidth + 20, // Start off-screen
         y: spawnY,
-        width: 60,
-        height: 60,
+        width: 98,
+        height: 98,
         speed: 2 + Math.random() * 1.5, // Slightly slower for more dramatic charging (2-3.5)
         health: 1,
         score: 500, // High score reward
@@ -1772,6 +1960,16 @@ class SpaceShooter {
               enemy.hasSpawned = true;
               enemy.isCharging = true; // Start charging after spawn
               this.createAnomalySpawnEffect(enemy.x + enemy.width / 2, enemy.y + enemy.height / 2);
+              
+              // Lower background music and boss music volume for dramatic effect
+              if (this.audioEnabled) {
+                if (this.backgroundMusic && !this.backgroundMusic.paused) {
+                  this.backgroundMusic.volume = 0.3; // Lower to 30% volume
+                }
+                if (this.bossIntroMusic && !this.bossIntroMusic.paused) {
+                  this.bossIntroMusic.volume = 0.3; // Lower to 30% volume
+                }
+              }
               
               // Play anomaly sound
               if (this.audioEnabled) {
@@ -1946,12 +2144,18 @@ class SpaceShooter {
                 if (this.audioEnabled && this.backgroundMusic) {
                   this.backgroundMusic.pause();
                   
-                  // Resume background music after 2 seconds for dramatic pause
+                  // Resume background music after 2 seconds with restored volume
                   setTimeout(() => {
                     if (this.audioEnabled && this.gameState === "playing") {
+                      this.backgroundMusic.volume = 1.0; // Restore full volume
                       this.backgroundMusic.play().catch(() => {});
                     }
                   }, 2000);
+                }
+                
+                // Restore boss music volume if it's playing
+                if (this.audioEnabled && this.bossIntroMusic && !this.bossIntroMusic.paused) {
+                  this.bossIntroMusic.volume = 1.0; // Restore full volume
                 }
                 
                 // Stop secret enemy audio if it's still playing

@@ -253,6 +253,40 @@
             </div>
         </div>
 
+        <!-- Settings Screen -->
+        <div id="settingsScreen" class="screen">
+            <div class="settings-content">
+                <h1 class="settings-title">AUDIO SETTINGS</h1>
+                <p class="settings-subtitle">Adjust game audio levels</p>
+                
+                <div class="settings-container">
+                    <div class="setting-item">
+                        <div class="setting-icon">🎵</div>
+                        <h3 class="setting-name">MUSIC VOLUME</h3>
+                        <p class="setting-description">Background and boss music volume</p>
+                        <div class="slider-container">
+                            <input type="range" id="musicVolumeSlider" class="audio-slider" min="0" max="100" value="100">
+                            <span class="slider-value" id="musicVolumeValue">100%</span>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-icon">🔊</div>
+                        <h3 class="setting-name">SOUND EFFECTS</h3>
+                        <p class="setting-description">Shooting, explosions, and game sounds</p>
+                        <div class="slider-container">
+                            <input type="range" id="sfxVolumeSlider" class="audio-slider" min="0" max="100" value="100">
+                            <span class="slider-value" id="sfxVolumeValue">100%</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-buttons">
+                    <button id="closeSettingsButton" class="game-btn">CLOSE</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Audio Elements -->
         <audio id="backgroundMusic" loop>
             <source src="assets/audio/backgroundMusic.mp3" type="audio/mpeg">
